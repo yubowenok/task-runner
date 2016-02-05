@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html ng-app="taskRunner">
+<head>
+  <meta charset="utf-8">
+  <title>Task Runner</title>
+
+  <script src="bower_components/underscore/underscore-min.js"></script>
+  <script src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="bower_components/angular/angular.js"></script>
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+  <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap-theme.css">
+
+  <script src="web/task-runner.js"></script>
+  <link rel="stylesheet" href="web/task-runner.css">
+
+</head>
+<body>
+<div class="container">
+  <div class="page-header">
+    <h3>Task Runner</h3>
+  </div>
+  <div ng-controller="testCtrl">
+    <div>
+      <h4>Select Task</h4>
+      <select ng-model="selected" class="form-control">
+        <option ng-repeat="task in tasks" value="{{$index}}">
+          Task {{$index + 1}}: {{task.title}}
+        </option>
+      </select>
+    </div>
+    <hr>
+
+    <div>
+      <div class="section">
+        <h4>Description</h4>
+        <div>{{tasks[selected].description}}</div>
+      </div>
+      <div class="section">
+        <h4>Sample Table ({{tasks[selected].tableName}})</h4>
+        <pre>{{tasks[selected].table}}</pre>
+      </div>
+      <div class="section">
+        <h4>Expected Sample Answer</h4>
+        <pre>{{tasks[selected].expected}}</pre>
+      </div>
+    </div>
+    <hr>
+
+    <div>
+      <h4>Paste Source</h4>
+      <textarea class="form-control" ng-model="source"></textarea>
+    </div>
+    <hr>
+
+    <div class="section" ng-show="result.processed">
+      <div ng-hide="!connectError" class="alert alert-danger">{{connectError}}</div>
+      <div>
+        <h3 class="correct" ng-show="result.diff === '' && result.error === ''">Correct!</h3>
+        <h3 class="incorrect" ng-show="result.diff !== '' || result.error !== ''">Incorrect</h3>
+        <div class="section" ng-show="result.error !== ''">
+          <h4>Execution Error</h4>
+          <pre>{{result.error}}</pre>
+        </div>
+        <div class="section" ng-show="result.output !== ''">
+          <h4>Your Output</h4>
+          <pre>{{result.output}}</pre>
+        </div>
+        <div class="section" ng-show="result.diff !== ''">
+          <h4>Diff</h4>
+          <pre>{{result.diff}}</pre>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" ng-disabled="source === '' || running" ng-click="submit()">{{running ? 'Running...' : 'Test On Sample'}}</button>
+  </div>
+</div>
+</body>
+</html>
