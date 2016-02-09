@@ -17,14 +17,14 @@
 <body>
 <div class="container">
   <div class="page-header">
-    <h3>Task Runner</h3>
+    <h3>SQL Task Runner</h3>
   </div>
   <div ng-controller="testCtrl">
     <div>
       <h4>Select Task</h4>
       <select ng-model="selected" class="form-control">
-        <option ng-repeat="task in tasks" value="{{$index}}">
-          Task {{$index + 1}}: {{task.title}}
+        <option ng-repeat="task in tasks" value="{{task.id}}">
+          {{task.id}}: {{task.title}}
         </option>
       </select>
     </div>
@@ -33,15 +33,18 @@
     <div>
       <div class="section">
         <h4>Description</h4>
-        <div>{{tasks[selected].description}}</div>
+        <div>{{currentTask.description}}</div>
       </div>
-      <div class="section">
-        <h4>Sample Table ({{tasks[selected].tableName}})</h4>
-        <pre>{{tasks[selected].table}}</pre>
+      <div id="tables" class="section">
+        <h4>Sample Tables</h4>
+        <div ng-repeat="table in currentTask.tables" id="t{{$index}}">
+          <h5>Table {{$index + 1}}: {{table.name}}</h5>
+          <pre>{{table.content}}</pre>
+        </div>
       </div>
       <div class="section">
         <h4>Expected Sample Answer</h4>
-        <pre>{{tasks[selected].expected}}</pre>
+        <pre>{{currentTask.answer}}</pre>
       </div>
     </div>
     <hr>
