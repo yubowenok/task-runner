@@ -33,33 +33,46 @@
     <div>
       <div class="section">
         <h4>Description</h4>
-        <div>{{currentTask.description}}</div>
+        <div ng-bind-html="currentTask.description"></div>
       </div>
-      <div id="tables" class="section">
+      <div id="tables" class="section" ng-hide="currentTask.id == 'all'">
         <h4>Sample Tables</h4>
         <div ng-repeat="table in currentTask.tables" id="t{{$index}}">
           <h5>Table {{$index + 1}}: {{table.name}}</h5>
           <pre>{{table.content}}</pre>
         </div>
       </div>
-      <div class="section">
+      <div class="section" ng-hide="currentTask.id == 'all'">
         <h4>Expected Sample Answer</h4>
         <pre>{{currentTask.answer}}</pre>
       </div>
     </div>
     <hr>
-
-    <div>
+    <div ng-hide="currentTask.id == 'all'">
       <h4>Paste Source</h4>
       <textarea class="form-control" ng-model="source"></textarea>
     </div>
+    <div id="file-section" ng-show="currentTask.id == 'all'">
+      <span id="file-display" class="form-control">{{fileName}}</span>
+      <button id="btn-file" class="btn btn-default" ng-click="fileSelect()">Choose File</button>
+      <input id="file-select" type="file" accept=".zip"/>
+    </div>
     <hr>
 
-    <div class="section" ng-show="result.processed">
-      <div ng-hide="!connectError" class="alert alert-danger">{{connectError}}</div>
+    <div ng-hide="!error" class="alert alert-danger">{{error}}</div>
+    <div class="section" ng-show="currentTask.id == 'all' && results.length && !running">
+      <ul id="results" class="list-group">
+        <a class="list-group-item result-item" ng-repeat="result in results" ng-click="showResult($index)">
+          <i class="glyphicon" ng-class="result.correct ? 'glyphicon-ok' : 'glyphicon-remove'"></i>
+          {{tasks[$index].id}}: {{tasks[$index].title}}
+        </a>
+      </ul>
+      <b>{{correctCount}} / {{results.length}} Correct</b>
+    </div>
+    <div class="section" ng-show="!running && processed">
       <div>
-        <h3 class="correct" ng-show="result.diff === '' && result.error === ''">Correct!</h3>
-        <h3 class="incorrect" ng-show="result.diff !== '' || result.error !== ''">Incorrect</h3>
+        <h3 class="correct" ng-show="result.correct">Correct!</h3>
+        <h3 class="incorrect" ng-show="!result.correct">Incorrect</h3>
         <div class="section" ng-show="result.error !== ''">
           <h4>Execution Error</h4>
           <pre>{{result.error}}</pre>
@@ -75,7 +88,8 @@
       </div>
     </div>
 
-    <button class="btn btn-primary" ng-disabled="source === '' || running" ng-click="submit()">{{running ? 'Running...' : 'Test On Sample'}}</button>
+    <button ng-show="selected != 'all'" class="btn btn-primary" ng-disabled="source === '' || running" ng-click="submit()">{{running ? 'Running...' : 'Test On Sample'}}</button>
+    <button ng-show="selected == 'all'"  class="btn btn-primary" ng-disabled="fileName === '' || running" ng-click="submitAll()">{{running ? 'Running...' : 'Test All On Samples'}}</button>
   </div>
 </div>
 </body>

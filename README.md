@@ -8,6 +8,8 @@ mkdir sandbox
 chmod 777 sandbox
 ```
 
+Please also make sure "unzip" is installed on the system.
+
 ### SQL Setup
 A user with name/password "task_runner" needs to be created with grant option.
 ```sql
@@ -31,3 +33,6 @@ The name of the file shall match the table name.
 Note that when the init script is called the current path is the root of task-runner.
 
 See tasks/all-taxes and tasks/specific-taxis for task examples.
+
+The description of all-task zip file submission (e.g. for reminding people of the correct file names) can be
+written in tasks/all-tasks.html. HTML syntax and styles are supported.

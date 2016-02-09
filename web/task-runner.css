@@ -21,3 +21,40 @@ textarea {
 .container {
   margin-bottom: 80px;
 }
+
+.result-item {
+  cursor: pointer;
+}
+
+.result-item .glyphicon {
+  margin-right: 10px;
+}
+
+#btn-file {
+  border-radius: 4px 0 0 4px;
+  z-index: 1;
+  position: relative;
+  top: -34px;
+}
+
+#file-select {
+  opacity: 0;
+  z-index: -1;
+  position: relative;
+}
+
+#file-display {
+  background: none;
+  left: 101px;
+  position: relative;
+  width: calc(100% - 101px);
+  border-left: 0;
+  border-radius: 0 4px 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#file-section {
+  height: 34px;
+}
