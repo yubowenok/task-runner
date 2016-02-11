@@ -50,6 +50,8 @@ function runTask($task, $source) {
 
   $output = file_get_contents($output_file);
   $error = file_get_contents($error_file);
+  // Suppress warning on using password from CLI.
+  $error = str_replace("Warning: Using a password on the command line interface can be insecure.\n", '', $error);
   $diff = file_get_contents($diff_file);
 
   if (!empty($diff)) {
@@ -115,7 +117,7 @@ function getTasks() {
   $all_tasks_description = file_get_contents('tasks/all-tasks.html');
   array_push($result, array(
     'id' => 'all',
-    'title' => 'all-tasks',
+    'title' => 'All Tasks',
     'description' => $all_tasks_description
   ));
   return $result;

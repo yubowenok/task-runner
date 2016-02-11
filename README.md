@@ -17,6 +17,8 @@ CREATE USER 'task_runner'@'localhost' IDENTIFIED BY 'task_runner';
 GRANT ALL PRIVILEGES ON *.* TO 'task_runner'@'localhost' WITH GRANT OPTION;
 ```
 
+MySQL needs to be in system path. Alternatively, you can add alias "mysql".
+
 ### Task Setup
 * Each task shall be given a unique id, e.g. 'all-taxes', 'task1'.
 * Create a folder under tasks/ with the id, i.e. tasks/{id}.

@@ -63,7 +63,7 @@
     <div class="section" ng-show="currentTask.id == 'all' && results.length && !running">
       <ul id="results" class="list-group">
         <a class="list-group-item result-item" ng-repeat="result in results" ng-click="showResult($index)">
-          <i class="glyphicon" ng-class="result.correct ? 'glyphicon-ok' : 'glyphicon-remove'"></i>
+          <i class="glyphicon" ng-class="result.correct ? 'glyphicon-ok correct' : 'glyphicon-remove incorrect'"></i>
           {{tasks[$index].id}}: {{tasks[$index].title}}
         </a>
       </ul>
