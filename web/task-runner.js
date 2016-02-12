@@ -189,8 +189,8 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
           $scope.result = checkCorrect(data);
           $scope.running = false;
         })
-        .error(function() {
-          $scope.error = CONNECT_ERROR_;
+        .error(function(error) {
+          $scope.error = error;
           $scope.running = false;
         });
     };
@@ -221,8 +221,8 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
           $scope.processed = false;
           $scope.running = false;
         })
-        .error(function() {
-          $scope.error = UPLOAD_ERROR_;
+        .error(function(error) {
+          $scope.error = error;
           $scope.running = false;
         });
     };

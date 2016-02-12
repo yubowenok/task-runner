@@ -1,4 +1,11 @@
 <?php
+function abort($msg) {
+  header("Content-type: application/json");
+  http_response_code(500);
+  echo json_encode($msg);
+  exit();
+}
+
 function randomString($length = 8) {
   $chars= 'abcdefghijklmnopqrstuvwxyz0123456789';
   $len = strlen($chars);
@@ -30,6 +37,18 @@ function runTask($task, $source) {
   $answer_file = $taskDir . $task . '.ans';
   $init_file = $taskDir . $task . '.sql';
 
+  $config = getTaskConfig();
+  foreach($config as $pattern => $def) {
+    $matched = @preg_match($pattern, $task);
+    if ($matched) {
+      if (array_key_exists('init', $def)) {
+        $init_file = 'tasks/' . $def['init'];
+      }
+    } else if ($matched === false) {
+      abort('invalid regex pattern in task config: ' . $pattern);
+    }
+  }
+
   $sql_admin = "mysql --user=task_runner --password=task_runner --local-infile=1";
   $sql_jail = "mysql --user=$hash --password=$hash";
 
@@ -43,7 +62,12 @@ function runTask($task, $source) {
   );
 
   exec("$sql_admin < $db_init_file 2> $error_file");
+  $sys_errors = file_get_contents($error_file);
+  if ($sys_errors !== '') abort($sys_errors);
+
   exec("$sql_admin $hash < $init_file 2> $error_file");
+  $sys_errors = file_get_contents($error_file);
+  if ($sys_errors !== '') abort($sys_errors);
 
   exec("$sql_jail $hash < $source_file > $output_file 2> $error_file");
   exec("diff -q --strip-trailing-cr $output_file $answer_file > $diff_file");
@@ -67,7 +91,9 @@ function runTask($task, $source) {
     )) . ';'
   );
 
-  exec("$sql_admin < $db_destroy_file");
+  exec("$sql_admin < $db_destroy_file 2> $error_file");
+  $sys_errors = file_get_contents($error_file);
+  if ($sys_errors !== '') abort($sys_errors);
 
   // Do not remove $sandboxDir if history is wanted.
   //exec("rm -r $sandboxDir");
@@ -81,7 +107,7 @@ function getTasks() {
 
   if ($handle = opendir('tasks/')) {
     while (false !== ($entry = readdir($handle))) {
-      if ($entry == "." || $entry == ".." || $entry == "all-tasks.html") continue;
+      if ($entry == "." || $entry == ".." || !is_dir('tasks/' . $entry)) continue;
 
       $taskDir = 'tasks/' . $entry . '/';
 
@@ -120,6 +146,34 @@ function getTasks() {
     'title' => 'All Tasks',
     'description' => $all_tasks_description
   ));
+  return $result;
+}
+
+function getTaskConfig() {
+  $result = array();
+  if (file_exists('tasks/config')) {
+    $config_str = file_get_contents('tasks/config');
+    $tokens = preg_split("/[\s\r\n]+/", $config_str);
+
+    $expect_task = false;
+    $expect_init = false;
+    $current_task = '';
+
+    foreach($tokens as $token) {
+      if ($token == '[task]') {
+        $expect_task = true;
+      } else if ($token == 'init:') {
+        $expect_init = true;
+      } else if ($expect_task) {
+        $current_task = $token;
+        $result[$current_task] = array();
+        $expect_task = false;
+      } else if ($expect_init) {
+        $result[$current_task]['init'] = $token;
+        $expect_init = false;
+      }
+    }
+  }
   return $result;
 }
 ?>
