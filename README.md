@@ -39,11 +39,16 @@ See tasks/all-taxes and tasks/specific-taxis for task examples.
 The description of all-task zip file submission (e.g. for reminding people of the correct file names) can be
 written in tasks/all-tasks.html. HTML syntax and styles are supported.
 
+All folders in tasks/ will be considered as a task, except for the folder _data_ into which you can put
+data files accessible to task init scripts.
+
 It is possible that multiple tasks have the same init script.
 In this case use task config file at tasks/config.
 ```
 [task] {regex}
 init: {filepath}
+sample_tables: {tablespath}
 ```
 This file sets the init script to _filepath_ for tasks with ids matching _regex_.
-Please note that _filepath_ is relative to tasks/.
+It also sets the sample tables folder to _tablespath_ for the matched tasks.
+Please note that _filepath_ and _tablespath_ are relative to tasks/.
