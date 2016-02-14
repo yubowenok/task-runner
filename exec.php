@@ -75,7 +75,7 @@ function runTask($task, $source) {
   $output = file_get_contents($output_file);
   $error = file_get_contents($error_file);
   // Suppress warning on using password from CLI.
-  $error = preg_replace("/[mysql: ]*\\[Warning\\]* Using a password on the command line interface can be insecure./i", '', $error);
+  $error = preg_replace("/(mysql: )*(\\[Warning\\]|Warning:)* Using a password on the command line interface can be insecure./i", '', $error);
   $diff = file_get_contents($diff_file);
 
   if (!empty($diff)) {
