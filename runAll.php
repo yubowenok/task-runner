@@ -3,20 +3,14 @@ include 'exec.php';
 
 header("Content-type: application/json");
 
-function abort() {
-  echo json_encode('bad');
-  exit();
-}
-
 if (!isset($_FILES['file']) || is_array($_FILES['file']['error'])) {
-  abort();
+  abort('upload failed');
 }
 
 $file = $_FILES['file'];
 
 if ($file['size'] > 100000) {
-  abort();
-  exit();
+  abort('file size cannot exceed 100KB');
 }
 
 $hash = randomString();

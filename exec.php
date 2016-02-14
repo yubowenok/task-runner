@@ -21,6 +21,14 @@ function randomString($length = 8) {
   return $str;
 }
 
+function parseError($error_file, $abort_on_error) {
+  $sys_errors = file_get_contents($error_file);
+  // Suppress warning on using password from CLI.
+  $sys_errors = preg_replace("/(mysql: )*(\\[Warning\\]|Warning:)* Using a password on the command line interface can be insecure.\n/i", '', $sys_errors);
+  if ($sys_errors !== '' && $abort_on_error) abort($sys_errors);
+	return $sys_errors;
+}
+
 function runTask($task, $source) {
   $hash = 'run_' . randomString();
   $sandboxDir = "sandbox/$hash/";
@@ -62,20 +70,16 @@ function runTask($task, $source) {
   );
 
   exec("$sql_admin < $db_init_file 2> $error_file");
-  $sys_errors = file_get_contents($error_file);
-  if ($sys_errors !== '') abort($sys_errors);
+	parseError($error_file, true);
 
   exec("$sql_admin $hash < $init_file 2> $error_file");
-  $sys_errors = file_get_contents($error_file);
-  if ($sys_errors !== '') abort($sys_errors);
+	parseError($error_file, true);
 
   exec("$sql_jail $hash < $source_file > $output_file 2> $error_file");
   exec("diff -q --strip-trailing-cr $output_file $answer_file > $diff_file");
 
   $output = file_get_contents($output_file);
-  $error = file_get_contents($error_file);
-  // Suppress warning on using password from CLI.
-  $error = preg_replace("/(mysql: )*(\\[Warning\\]|Warning:)* Using a password on the command line interface can be insecure./i", '', $error);
+	$error = parseError($error_file, false);
   $diff = file_get_contents($diff_file);
 
   if (!empty($diff)) {
@@ -92,8 +96,7 @@ function runTask($task, $source) {
   );
 
   exec("$sql_admin < $db_destroy_file 2> $error_file");
-  $sys_errors = file_get_contents($error_file);
-  if ($sys_errors !== '') abort($sys_errors);
+	parseError($error_file, true);
 
   // Do not remove $sandboxDir if history is wanted.
   //exec("rm -r $sandboxDir");
@@ -159,6 +162,12 @@ function getTasks() {
     'title' => 'All Tasks',
     'description' => $all_tasks_description
   ));
+
+	function cmp($a, $b) {
+		if ($a['id'] == $b['id']) return 0;
+	  return ($a['id'] < $b['id']) ? -1 : 1;
+	}
+	usort($result, 'cmp');
   return $result;
 }
 

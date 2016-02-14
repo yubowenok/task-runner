@@ -202,7 +202,7 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
           task.description = $sce.trustAsHtml(task.description);
         });
         // By default select the first task.
-        $scope.selected = _.last(data).id;
+        $scope.selected = _.first(data).id;
       })
       .error(function() {
         $scope.error = CONNECT_ERROR_;
