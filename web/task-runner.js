@@ -61,6 +61,23 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
     $scope.currentTask = {};
 
     /**
+     * Selected table index.
+     * @type {number}
+     */
+    $scope.selectedTable = -1;
+
+    /**
+     * @type {{
+     *   name: string,
+     *   content: string
+     * }}
+     */
+    $scope.currentTable = {
+      name: '',
+      content: ''
+    };
+
+    /**
      * String of submitted source.
      * @type {string}
      */
@@ -156,11 +173,24 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
       $scope.allTasks = false;
 
       $scope.currentTask = $scope.taskById[$scope.selected];
+
       $scope.processed = false;
       if ($scope.currentTask == null) {
         return;
       }
+      $scope.selectedTable = 0;
+      $scope.currentTable = $scope.currentTask.tables != null ?
+        $scope.currentTask.tables[0] : {name: '', content: ''};
     });
+
+    /**
+     * Sets the current table index.
+     * @param {number} index
+     */
+    $scope.setTable = function(index) {
+      $scope.selectedTable = index;
+      $scope.currentTable = $scope.currentTask.tables[$scope.selectedTable];
+    };
 
     // Fetch tasks.
     $http.post('./tasks.php')
@@ -189,8 +219,8 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
           $scope.result = checkCorrect(data);
           $scope.running = false;
         })
-        .error(function() {
-          $scope.error = CONNECT_ERROR_;
+        .error(function(error) {
+          $scope.error = error;
           $scope.running = false;
         });
     };
@@ -221,8 +251,8 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
           $scope.processed = false;
           $scope.running = false;
         })
-        .error(function() {
-          $scope.error = UPLOAD_ERROR_;
+        .error(function(error) {
+          $scope.error = error;
           $scope.running = false;
         });
     };

@@ -58,3 +58,7 @@ textarea {
 #file-section {
   height: 34px;
 }
+
+pre {
+  max-height: 300px;
+}

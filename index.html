@@ -37,9 +37,14 @@
       </div>
       <div id="tables" class="section" ng-hide="currentTask.id == 'all'">
         <h4>Sample Tables</h4>
-        <div ng-repeat="table in currentTask.tables" id="t{{$index}}">
-          <h5>Table {{$index + 1}}: {{table.name}}</h5>
-          <pre>{{table.content}}</pre>
+        <ul class="nav nav-tabs">
+          <li ng-repeat="table in currentTask.tables" ng-class="selectedTable == $index ? 'active' : ''">
+            <a href="#" ng-click="setTable($index)">{{table.name}}</a>
+          </li>
+        </ul>
+        <div ng-hide="selectedTable == -1">
+          <h5>Table {{selectedTable + 1}}: {{currentTable.name}}</h5>
+          <pre>{{currentTable.content}}</pre>
         </div>
       </div>
       <div class="section" ng-hide="currentTask.id == 'all'">
@@ -58,6 +63,9 @@
       <input id="file-select" type="file" accept=".zip"/>
     </div>
     <hr>
+
+    <button ng-show="selected != 'all'" class="btn btn-primary" ng-disabled="source === '' || running" ng-click="submit()">{{running ? 'Running...' : 'Test On Sample'}}</button>
+    <button ng-show="selected == 'all'"  class="btn btn-primary" ng-disabled="fileName === '' || running" ng-click="submitAll()">{{running ? 'Running...' : 'Test All On Samples'}}</button>
 
     <div ng-hide="!error" class="alert alert-danger">{{error}}</div>
     <div class="section" ng-show="currentTask.id == 'all' && results.length && !running">
@@ -87,9 +95,6 @@
         </div>
       </div>
     </div>
-
-    <button ng-show="selected != 'all'" class="btn btn-primary" ng-disabled="source === '' || running" ng-click="submit()">{{running ? 'Running...' : 'Test On Sample'}}</button>
-    <button ng-show="selected == 'all'"  class="btn btn-primary" ng-disabled="fileName === '' || running" ng-click="submitAll()">{{running ? 'Running...' : 'Test All On Samples'}}</button>
   </div>
 </div>
 </body>
