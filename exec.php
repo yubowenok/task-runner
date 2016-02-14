@@ -26,7 +26,7 @@ function runTask($task, $source) {
   $sandboxDir = "sandbox/$hash/";
   mkdir($sandboxDir);
 
-  $taskDir = "tasks/$task/";
+  $task_dir = "tasks/$task/";
   $source_file = $sandboxDir . 'user.sql';
   file_put_contents($source_file, $source);
   $output_file = $sandboxDir . 'output';
@@ -34,8 +34,8 @@ function runTask($task, $source) {
   $diff_file = $sandboxDir . 'diff';
   $db_init_file = $sandboxDir . 'db_init.sql';
   $db_destroy_file = $sandboxDir . 'db_destroy.sql';
-  $answer_file = $taskDir . $task . '.ans';
-  $init_file = $taskDir . $task . '.sql';
+  $answer_file = $task_dir . $task . '.ans';
+  $init_file = $task_dir . $task . '.sql';
 
   $config = getTaskConfig();
   foreach($config as $pattern => $def) {
@@ -104,25 +104,38 @@ function runTask($task, $source) {
 
 function getTasks() {
   $result = array();
+  $config = getTaskConfig();
 
   if ($handle = opendir('tasks/')) {
     while (false !== ($entry = readdir($handle))) {
-      if ($entry == "." || $entry == ".." || !is_dir('tasks/' . $entry)) continue;
+      if ($entry == '.' || $entry == '..' || $entry == 'data' || !is_dir('tasks/' . $entry)) continue;
 
-      $taskDir = 'tasks/' . $entry . '/';
+      $task = $entry;
+      $task_dir = 'tasks/' . $task . '/';
+      $tables_dir = $task_dir . 'tables/';
 
-      $info = file_get_contents($taskDir . $entry . '.info');
+      foreach($config as $pattern => $def) {
+        $matched = @preg_match($pattern, $task);
+        if ($matched) {
+          if (array_key_exists('sample_tables', $def)) {
+            $tables_dir = 'tasks/' . $def['sample_tables'];
+          }
+        } else if ($matched === false) {
+          abort('invalid regex pattern in task config: ' . $pattern);
+        }
+      }
+
+      $info = file_get_contents($task_dir . $task . '.info');
       $info = explode("\n", $info);
 
-      $description = file_get_contents($taskDir . $entry . '.html');
-      $answer = file_get_contents($taskDir . $entry . '.ans');
+      $description = file_get_contents($task_dir . $task . '.html');
+      $answer = file_get_contents($task_dir . $task . '.ans');
 
       $tables = array();
-      $tableDir = $taskDir . '/tables/';
-      if ($tableHandle = opendir($tableDir)) {
+      if ($tableHandle = opendir($tables_dir)) {
         while (false !== ($tableEntry = readdir($tableHandle))) {
           if ($tableEntry == "." || $tableEntry == "..") continue;
-          $tableContent = file_get_contents($tableDir . '/' . $tableEntry);
+          $tableContent = file_get_contents($tables_dir . '/' . $tableEntry);
           array_push($tables, array(
             'name' => $tableEntry,
             'content' => $tableContent
@@ -157,6 +170,7 @@ function getTaskConfig() {
 
     $expect_task = false;
     $expect_init = false;
+    $expect_sample_tables = false;
     $current_task = '';
 
     foreach($tokens as $token) {
@@ -164,6 +178,8 @@ function getTaskConfig() {
         $expect_task = true;
       } else if ($token == 'init:') {
         $expect_init = true;
+      } else if ($token == 'sample_tables:') {
+        $expect_sample_tables = true;
       } else if ($expect_task) {
         $current_task = $token;
         $result[$current_task] = array();
@@ -171,6 +187,9 @@ function getTaskConfig() {
       } else if ($expect_init) {
         $result[$current_task]['init'] = $token;
         $expect_init = false;
+      } else if ($expect_sample_tables) {
+        $result[$current_task]['sample_tables'] = $token;
+        $expect_sample_tables = false;
       }
     }
   }
