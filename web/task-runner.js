@@ -5,9 +5,9 @@ var FILE_SIZE_LIMIT_ = 100000;
 /** @private @const {string} */
 var FILE_SIZE_ERROR_ = 'file size cannot exceed 100KB';
 /** @private @const {string} */
-var CONNECT_ERROR_ = 'cannot connect to server';
+var CONNECT_ERROR_ = 'cannot connect to server, please try again later';
 /** @private @const {string} */
-var UPLOAD_ERROR_ = 'cannot upload file';
+var TIME_LIMIT_ERROR_ = 'code exceeded maximum execution time limit';
 
 /**
  * @typedef {{
@@ -215,9 +215,14 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
         task: $scope.currentTask.id,
         source: $scope.source
       }).success(function(data) {
+          $scope.running = false;
+          if (typeof(data) == 'string' &&
+          data.match(/maximum execution time/i) != null) {
+            $scope.error = TIME_LIMIT_ERROR_;
+            return;
+          }
           $scope.processed = true;
           $scope.result = checkCorrect(data);
-          $scope.running = false;
         })
         .error(function(error) {
           $scope.error = error;
@@ -242,6 +247,12 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
       $http.post('./runAll.php', formData, {
         headers: {'Content-Type': undefined}
       }).success(function(data) {
+          $scope.running = false;
+          if (typeof(data) == 'string' &&
+            data.match(/maximum execution time/i) != null) {
+            $scope.error = TIME_LIMIT_ERROR_;
+            return;
+          }
           $scope.correctCount = 0;
           $scope.results = data.map(function(result) {
             var newResult = checkCorrect(result);
@@ -252,8 +263,11 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
           $scope.running = false;
         })
         .error(function(error) {
-          $scope.error = error;
           $scope.running = false;
+          if (error == undefined) {
+            error = CONNECT_ERROR_;
+          }
+          $scope.error = error;
         });
     };
   }

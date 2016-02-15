@@ -1,10 +1,8 @@
 <?php
 include 'exec.php';
 
-header("Content-type: application/json");
-
 if (!isset($_FILES['file']) || is_array($_FILES['file']['error'])) {
-  abort('upload failed');
+  abort('upload failed, missing zip file');
 }
 
 $file = $_FILES['file'];
@@ -14,6 +12,9 @@ if ($file['size'] > 100000) {
 }
 
 $hash = randomString();
+while (file_exists("sandbox/file_$hash/")) {
+  $hash = randomString();
+}
 $sandboxDir = "sandbox/file_$hash/";
 mkdir($sandboxDir);
 
@@ -21,6 +22,8 @@ $zip = $sandboxDir . 'sources.zip';
 move_uploaded_file($file['tmp_name'], $zip);
 
 exec("unzip $zip -d $sandboxDir");
+
+set_time_limit(120);
 
 $tasks = getTasks();
 $result = array();
@@ -36,11 +39,13 @@ foreach ($tasks as $task) {
     ));
   } else {
     $source = file_get_contents($source_file);
-		$runResult = runTask($task['id'], $source);
-		$runResult['id'] = $task['id'];
+    $runResult = runTask($task['id'], $source);
+    $runResult['id'] = $task['id'];
     array_push($result, $runResult);
   }
 }
+
+header("Content-type: application/json");
 echo json_encode($result);
 
 // Do not remove $sandboxDir if history is wanted.

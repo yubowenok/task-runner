@@ -30,7 +30,11 @@ function parseError($error_file, $abort_on_error) {
 }
 
 function runTask($task, $source) {
-  $hash = 'run_' . randomString();
+  $hash = randomString();
+  while (file_exists("sandbox/run_$hash/")) {
+    $hash = randomString();
+  }
+  $hash = 'run_' . $hash;
   $sandboxDir = "sandbox/$hash/";
   mkdir($sandboxDir);
 
