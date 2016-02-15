@@ -36,7 +36,9 @@ foreach ($tasks as $task) {
     ));
   } else {
     $source = file_get_contents($source_file);
-    array_push($result, runTask($task['id'], $source));
+		$runResult = runTask($task['id'], $source);
+		$runResult['id'] = $task['id'];
+    array_push($result, $runResult);
   }
 }
 echo json_encode($result);

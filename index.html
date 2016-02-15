@@ -72,7 +72,7 @@
       <ul id="results" class="list-group">
         <a class="list-group-item result-item" ng-repeat="result in results" ng-click="showResult($index)">
           <i class="glyphicon" ng-class="result.correct ? 'glyphicon-ok correct' : 'glyphicon-remove incorrect'"></i>
-          {{tasks[$index].id}}: {{tasks[$index].title}}
+          {{taskById[result.id].id}}: {{taskById[result.id].title}}
         </a>
       </ul>
       <b>{{correctCount}} / {{results.length}} Correct</b>
