@@ -66,7 +66,7 @@
     </div>
     <hr>
 
-    <button ng-show="selected != 'all'" class="btn btn-primary" ng-disabled="source === '' || running" ng-click="submit()">{{running ? 'Running...' : 'Test On Sample'}}</button>
+    <button ng-show="selected != 'all'" class="btn btn-primary" ng-disabled="mapSource === '' || redSource === '' || running" ng-click="submit()">{{running ? 'Running...' : 'Test On Sample'}}</button>
     <button ng-show="selected == 'all'"  class="btn btn-primary" ng-disabled="fileName === '' || running" ng-click="submitAll()">{{running ? 'Running...' : 'Test All On Samples'}}</button>
 
     <div ng-hide="!error" class="alert alert-danger">{{error}}</div>
