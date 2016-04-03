@@ -212,10 +212,12 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
     $scope.submit = function() {
       $scope.running = true;
       $scope.error = '';
-      $http.post('./run.php',{
-        task: $scope.currentTask.id,
-        mapSource: $scope.mapSource,
-        redSource: $scope.redSource
+      var formFata = new FormData();
+      formData.append('task', $scope.currentTask.id);
+      formData.append('mapSource', $scope.mapSource);
+      formData.append('redSource', $scope.redSource);
+      $http.post('./run.php', formData, {
+        // headers: {'Content-Type': undefined}
       }).success(function(data) {
           $scope.running = false;
           if (typeof(data) == 'string' &&

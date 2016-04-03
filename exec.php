@@ -72,7 +72,7 @@ function runTask($task, $map_py, $red_py) {
     exec("export mapreduce_map_input_file=$file; python $map_file < $file >> $output_file 2>> $error_file");
     $error = parseError($error_file, false);
   }
-  exec("sort -n $output_file | python $red_file > $red_output_file 2>> $error_file");
+  exec("sort $output_file | python $red_file > $red_output_file 2>> $error_file");
   $error = parseError($error_file, false);
 
   exec("diff -q --strip-trailing-cr $red_output_file $answer_file > $diff_file");
