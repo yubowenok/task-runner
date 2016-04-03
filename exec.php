@@ -23,13 +23,11 @@ function randomString($length = 8) {
 
 function parseError($error_file, $abort_on_error) {
   $sys_errors = file_get_contents($error_file);
-  // Suppress warning on using password from CLI.
-  $sys_errors = preg_replace("/(mysql: )*(\\[Warning\\]|Warning:)* Using a password on the command line interface can be insecure.\n/i", '', $sys_errors);
   if ($sys_errors !== '' && $abort_on_error) abort($sys_errors);
 	return $sys_errors;
 }
 
-function runTask($task, $source) {
+function runTask($task, $map_py, $red_py) {
   $hash = randomString();
   while (file_exists("sandbox/run_$hash/")) {
     $hash = randomString();
@@ -39,68 +37,53 @@ function runTask($task, $source) {
   mkdir($sandboxDir);
 
   $task_dir = "tasks/$task/";
-  $source_file = $sandboxDir . 'user.sql';
-  file_put_contents($source_file, $source);
+  $map_file = $sandboxDir . 'map.py';
+  $red_file = $sandboxDir . 'reduce.py';
+  file_put_contents($map_file, $map_py);
+  file_put_contents($red_file, $red_py);
   $output_file = $sandboxDir . 'output';
+  $red_output_file = $sandboxDir . 'red_output';
   $error_file = $sandboxDir . 'error';
   $diff_file = $sandboxDir . 'diff';
-  $db_init_file = $sandboxDir . 'db_init.sql';
-  $db_destroy_file = $sandboxDir . 'db_destroy.sql';
   $answer_file = $task_dir . $task . '.ans';
-  $init_file = $task_dir . $task . '.sql';
+  $sample_tables = '';
 
   $config = getTaskConfig();
   foreach($config as $pattern => $def) {
     $matched = @preg_match($pattern, $task);
     if ($matched) {
-      if (array_key_exists('init', $def)) {
-        $init_file = 'tasks/' . $def['init'];
+      if (array_key_exists('sample_tables', $def)) {
+         $sample_tables = 'tasks/' . $def['sample_tables'];
       }
     } else if ($matched === false) {
       abort('invalid regex pattern in task config: ' . $pattern);
     }
   }
 
-  $sql_admin = "mysql --user=task_runner --password=task_runner --local-infile=1";
-  $sql_jail = "mysql --user=$hash --password=$hash";
+  $input_files = array();
+  if ($handle = opendir($sample_tables)) {
+    while (false !== ($entry = readdir($handle))) {
+      if ($entry == "." || $entry == "..") continue;
+      array_push($input_files, $sample_tables . $entry);
+    }
+  }     
 
-  file_put_contents($db_init_file,
-    join(";\n", array(
-      "create database $hash",
-      "create user '$hash'@'localhost' identified by '$hash'",
-      "grant all privileges on $hash.* to '$hash'@'localhost'",
-      "flush privileges"
-    )) . ';'
-  );
+  foreach ($input_files as $file) { 
+    exec("export mapreduce_map_input_file=$file; python $map_file < $file >> $output_file 2>> $error_file");
+    $error = parseError($error_file, false);
+  }
+  exec("sort -n $output_file | python $red_file > $red_output_file 2>> $error_file");
+  $error = parseError($error_file, false);
 
-  exec("$sql_admin < $db_init_file 2> $error_file");
-	parseError($error_file, true);
+  exec("diff -q --strip-trailing-cr $red_output_file $answer_file > $diff_file");
 
-  exec("$sql_admin $hash < $init_file 2> $error_file");
-	parseError($error_file, true);
-
-  exec("$sql_jail $hash < $source_file > $output_file 2> $error_file");
-  exec("diff -q --strip-trailing-cr $output_file $answer_file > $diff_file");
-
-  $output = file_get_contents($output_file);
-	$error = parseError($error_file, false);
+  $output = file_get_contents($red_output_file);
   $diff = file_get_contents($diff_file);
 
   if (!empty($diff)) {
-    exec("diff -y --strip-trailing-cr $output_file $answer_file > $diff_file");
+    exec("diff -y --strip-trailing-cr $red_output_file $answer_file > $diff_file");
     $diff = file_get_contents($diff_file);
   }
-
-  file_put_contents($db_destroy_file,
-    join(";\n", array(
-      "revoke all privileges on $hash.* from '$hash'@'localhost'",
-      "drop user '$hash'@'localhost'",
-      "drop database $hash"
-    )) . ';'
-  );
-
-  exec("$sql_admin < $db_destroy_file 2> $error_file");
-	parseError($error_file, true);
 
   // Do not remove $sandboxDir if history is wanted.
   //exec("rm -r $sandboxDir");
@@ -167,11 +150,11 @@ function getTasks() {
     'description' => $all_tasks_description
   ));
 
-	function cmp($a, $b) {
-		if ($a['id'] == $b['id']) return 0;
-	  return ($a['id'] < $b['id']) ? -1 : 1;
-	}
-	usort($result, 'cmp');
+  function cmp($a, $b) {
+    if ($a['id'] == $b['id']) return 0;
+    return ($a['id'] < $b['id']) ? -1 : 1;
+  }
+  usort($result, 'cmp');
   return $result;
 }
 
@@ -182,24 +165,18 @@ function getTaskConfig() {
     $tokens = preg_split("/[\s\r\n]+/", $config_str);
 
     $expect_task = false;
-    $expect_init = false;
     $expect_sample_tables = false;
     $current_task = '';
 
     foreach($tokens as $token) {
       if ($token == '[task]') {
         $expect_task = true;
-      } else if ($token == 'init:') {
-        $expect_init = true;
       } else if ($token == 'sample_tables:') {
         $expect_sample_tables = true;
       } else if ($expect_task) {
         $current_task = $token;
         $result[$current_task] = array();
         $expect_task = false;
-      } else if ($expect_init) {
-        $result[$current_task]['init'] = $token;
-        $expect_init = false;
       } else if ($expect_sample_tables) {
         $result[$current_task]['sample_tables'] = $token;
         $expect_sample_tables = false;

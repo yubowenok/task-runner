@@ -17,7 +17,7 @@
 <body>
 <div class="container">
   <div class="page-header">
-    <h3>SQL Task Runner</h3>
+    <h3>Hadoop Streaming Task Runner</h3>
   </div>
   <div ng-controller="testCtrl">
     <div>
@@ -36,14 +36,14 @@
         <div ng-bind-html="currentTask.description"></div>
       </div>
       <div id="tables" class="section" ng-hide="currentTask.id == 'all'">
-        <h4>Sample Tables</h4>
+        <h4>Sample Input Files</h4>
         <ul class="nav nav-tabs">
           <li ng-repeat="table in currentTask.tables" ng-class="selectedTable == $index ? 'active' : ''">
             <a href="#" ng-click="setTable($index)">{{table.name}}</a>
           </li>
         </ul>
         <div ng-hide="selectedTable == -1">
-          <h5>Table {{selectedTable + 1}}: {{currentTable.name}}</h5>
+          <h5>Input File {{selectedTable + 1}}: {{currentTable.name}}</h5>
           <pre>{{currentTable.content}}</pre>
         </div>
       </div>
@@ -54,8 +54,10 @@
     </div>
     <hr>
     <div ng-hide="currentTask.id == 'all'">
-      <h4>Paste Source</h4>
-      <textarea class="form-control" ng-model="source"></textarea>
+      <h4>Paste Map Source</h4>
+      <textarea class="form-control" ng-model="mapSource"></textarea>     
+      <h4>Paste Reduce Source</h4>
+      <textarea class="form-control" ng-model="redSource"></textarea>     
     </div>
     <div id="file-section" ng-show="currentTask.id == 'all'">
       <span id="file-display" class="form-control">{{fileName}}</span>

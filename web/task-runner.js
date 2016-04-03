@@ -81,7 +81,8 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
      * String of submitted source.
      * @type {string}
      */
-    $scope.source = '';
+    $scope.mapSource = '';
+    $scope.redSource = '';
 
     /**
      * Whether server is running the submission.
@@ -213,7 +214,8 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
       $scope.error = '';
       $http.post('./run.php',{
         task: $scope.currentTask.id,
-        source: $scope.source
+        mapSource: $scope.mapSource,
+        redSource: $scope.redSource
       }).success(function(data) {
           $scope.running = false;
           if (typeof(data) == 'string' &&

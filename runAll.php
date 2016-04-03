@@ -29,17 +29,20 @@ $tasks = getTasks();
 $result = array();
 foreach ($tasks as $task) {
   if ($task['id'] == 'all') continue;
-  $source_file = $sandboxDir . $task['id'] . '.sql';
-  if (!file_exists($source_file)) {
+  $task_id = $task['id'];
+  $map_py = "$sandboxDir/$task_id/map.py";
+  $red_py = "$sandboxDir/$task_id/reduce.py"; 
+  if (!file_exists($map_py) || !file_exists($red_py)) {
     array_push($result, array(
       'id' => $task['id'],
-      'error' => 'no solution found for the task, expecting file name "' . $task['id'] . '.sql"',
+      'error' => "Cannot find mapper or reducer.\nExpecting $task_id/map.py and $task_id/reduce.py",
       'diff' => '',
       'output' => ''
     ));
   } else {
-    $source = file_get_contents($source_file);
-    $runResult = runTask($task['id'], $source);
+    $map_source = file_get_contents($map_py);
+    $red_source = file_get_contents($red_py);
+    $runResult = runTask($task['id'], $map_source, $red_source);
     $runResult['id'] = $task['id'];
     array_push($result, $runResult);
   }
