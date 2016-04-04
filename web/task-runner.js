@@ -1,14 +1,5 @@
 var taskRunner = angular.module('taskRunner', []);
 
-/** @private @const {number} */
-var FILE_SIZE_LIMIT_ = 100000;
-/** @private @const {string} */
-var FILE_SIZE_ERROR_ = 'file size cannot exceed 100KB';
-/** @private @const {string} */
-var CONNECT_ERROR_ = 'cannot connect to server, please try again later';
-/** @private @const {string} */
-var TIME_LIMIT_ERROR_ = 'code exceeded maximum execution time limit';
-
 /**
  * @typedef {{
      *   id: string,
@@ -30,6 +21,19 @@ var TaskResult;
 
 taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
   function($scope, $http, $sce) {
+    /** @private @const {number} */
+    var FILE_SIZE_LIMIT_ = 100000;
+    /** @private @const {string} */
+    var FILE_SIZE_ERROR_ = 'file size cannot exceed 100KB';
+    /** @private @const {string} */
+    var CONNECT_ERROR_ = 'cannot connect to server, please try again later';
+    /** @private @const {string} */
+    var TIME_LIMIT_ERROR_ = 'code exceeded maximum execution time limit';
+    /** @private @const {number} */
+    var TASK_TIME_LIMIT_ = 5000;
+    /** @private @const {number} */
+    var ZIP_TIME_LIMIT_ = 60000;
+
     /**
      * Task specification.
      * @type {!Array<Task>}
@@ -218,20 +222,24 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
       formData.append('redSource', $scope.redSource);
 
       $http.post('./run.php', formData, {
-        headers: {'Content-Type': undefined}
-      }).success(function(data) {
+        headers: {'Content-Type': undefined},
+        timeout: TASK_TIME_LIMIT_
+      }).then(function(res) {
           $scope.running = false;
-          if (typeof(data) == 'string' &&
-          data.match(/maximum execution time/i) != null) {
+          $scope.processed = true;
+          $scope.result = checkCorrect(res.data);
+        },
+        function(error) {
+          $scope.running = false;
+          if (error.status && error.status == -1) {
             $scope.error = TIME_LIMIT_ERROR_;
+            $scope.processed = false;
             return;
           }
-          $scope.processed = true;
-          $scope.result = checkCorrect(data);
-        })
-        .error(function(error) {
+          if (error == undefined) {
+            error = CONNECT_ERROR_;
+          }
           $scope.error = error;
-          $scope.running = false;
         });
     };
 
@@ -250,25 +258,26 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
       formData.append('file', $scope.file);
 
       $http.post('./runAll.php', formData, {
-        headers: {'Content-Type': undefined}
-      }).success(function(data) {
+        headers: {'Content-Type': undefined},
+        timeout: ZIP_TIME_LIMIT_
+      }).then(function(res) {
           $scope.running = false;
-          if (typeof(data) == 'string' &&
-            data.match(/maximum execution time/i) != null) {
-            $scope.error = TIME_LIMIT_ERROR_;
-            return;
-          }
           $scope.correctCount = 0;
-          $scope.results = data.map(function(result) {
+          $scope.results = res.data.map(function(result) {
             var newResult = checkCorrect(result);
             $scope.correctCount += newResult.correct;
             return newResult;
           });
           $scope.processed = false;
           $scope.running = false;
-        })
-        .error(function(error) {
+        },
+        function(error) {
           $scope.running = false;
+          if (error.status && error.status == -1) {
+            $scope.error = TIME_LIMIT_ERROR_;
+            $scope.results = [];
+            return;
+          }
           if (error == undefined) {
             error = CONNECT_ERROR_;
           }
