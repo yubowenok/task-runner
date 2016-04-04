@@ -239,7 +239,7 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
             if (error.status == -1) {
               $scope.error = TIME_LIMIT_ERROR_;
             } else if (error.statusText == 'Method Not Implemented') {
-              $scope.error = PYTHON_MAKRER_ERROR_; 
+              $scope.error = PYTHON_MARKER_ERROR_; 
             } else {
               $scope.error = UNKNOWN_ERROR_;
             }
