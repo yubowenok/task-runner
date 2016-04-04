@@ -29,6 +29,10 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
     var CONNECT_ERROR_ = 'cannot connect to server, please try again later';
     /** @private @const {string} */
     var TIME_LIMIT_ERROR_ = 'code exceeded maximum execution time limit';
+    /** @private @const {string} */
+    var UNKNOWN_ERROR_ = 'unexpected error from the server, please contact admin';
+    /** @private @const {string} */
+    var PYTHON_MARKER_ERROR_ = 'please remove "!#/usr/bin/python" from the pasted source code';
     /** @private @const {number} */
     var TASK_TIME_LIMIT_ = 5000;
     /** @private @const {number} */
@@ -231,8 +235,14 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
         },
         function(error) {
           $scope.running = false;
-          if (error.status && error.status == -1) {
-            $scope.error = TIME_LIMIT_ERROR_;
+          if (error.status) {
+            if (error.status == -1) {
+              $scope.error = TIME_LIMIT_ERROR_;
+            } else if (error.statusText == 'Method Not Implemented') {
+              $scope.error = PYTHON_MAKRER_ERROR_; 
+            } else {
+              $scope.error = UNKNOWN_ERROR_;
+            }
             $scope.processed = false;
             return;
           }
@@ -273,8 +283,12 @@ taskRunner.controller('testCtrl', ['$scope', '$http', '$sce',
         },
         function(error) {
           $scope.running = false;
-          if (error.status && error.status == -1) {
-            $scope.error = TIME_LIMIT_ERROR_;
+          if (error.status) {
+            if (error.status == -1) {
+              $scope.error = TIME_LIMIT_ERROR_;
+            } else {
+              $scope.error = UNKNOWN_ERROR_;
+            }
             $scope.results = [];
             return;
           }
