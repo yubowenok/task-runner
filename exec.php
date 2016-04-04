@@ -42,7 +42,7 @@ function runTask($task, $map_py, $red_py) {
   file_put_contents($map_file, $map_py);
   file_put_contents($red_file, $red_py);
   $output_file = $sandboxDir . 'output';
-  $red_output_file = $sandboxDir . 'red_output';
+  $output_file2 = $sandboxDir . 'output2';
   $error_file = $sandboxDir . 'error';
   $diff_file = $sandboxDir . 'diff';
   $answer_file = $task_dir . $task . '.ans';
@@ -69,19 +69,19 @@ function runTask($task, $map_py, $red_py) {
   }     
 
   foreach ($input_files as $file) { 
-    exec("export mapreduce_map_input_file=$file; python $map_file < $file >> $output_file 2>> $error_file");
+    exec("export mapreduce_map_input_file=$file; python $map_file < $file >> $output_file2 2>> $error_file");
     $error = parseError($error_file, false);
   }
-  exec("sort $output_file | python $red_file > $red_output_file 2>> $error_file");
+  exec("sort $output_file2 | python $red_file 2>> $error_file | sort > $output_file");
   $error = parseError($error_file, false);
 
-  exec("diff -q --strip-trailing-cr $red_output_file $answer_file > $diff_file");
+  exec("sort $answer_file | diff -q --strip-trailing-cr $output_file - > $diff_file");
 
-  $output = file_get_contents($red_output_file);
+  $output = file_get_contents($output_file);
   $diff = file_get_contents($diff_file);
 
   if (!empty($diff)) {
-    exec("diff -y --strip-trailing-cr $red_output_file $answer_file > $diff_file");
+    exec("sort $answer_file | diff -y --strip-trailing-cr $output_file - > $diff_file");
     $diff = file_get_contents($diff_file);
   }
 
