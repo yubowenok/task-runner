@@ -42,7 +42,9 @@ function runTask($task, $map_py, $red_py) {
   file_put_contents($map_file, $map_py);
   file_put_contents($red_file, $red_py);
   $output_file = $sandboxDir . 'output';
-  $output_file2 = $sandboxDir . 'output2';
+  $map_output = $sandboxDir . 'map_output';
+  $map_output_sorted = $sandboxDir . 'map_output_sorted';
+  $red_output = $sandboxDir . 'red_output';
   $error_file = $sandboxDir . 'error';
   $diff_file = $sandboxDir . 'diff';
   $answer_file = $task_dir . $task . '.ans';
@@ -69,10 +71,16 @@ function runTask($task, $map_py, $red_py) {
   }     
 
   foreach ($input_files as $file) { 
-    exec("export mapreduce_map_input_file=$file; python $map_file < $file >> $output_file2 2>> $error_file");
-    $error = parseError($error_file, false);
+    exec("export mapreduce_map_input_file=$file; python $map_file < $file >> $map_output 2>> $error_file");
+    parseError($error_file, false);
   }
-  exec("sort $output_file2 | python $red_file 2>> $error_file | sort > $output_file");
+  exec("sort $map_output > $map_output_sorted");
+  exec("python partition.py $sandboxDir < $map_output_sorted 2>> $error_file");
+  $red_input1 = $sandboxDir . 'red_input1';
+  $red_input2 = $sandboxDir . 'red_input2';
+  exec("python $red_file < $red_input1 2>> $error_file >> $red_output");
+  exec("python $red_file < $red_input2 2>> $error_file >> $red_output");
+  exec("sort $red_output > $output_file");
   $error = parseError($error_file, false);
 
   exec("sort $answer_file | diff -q --strip-trailing-cr $output_file - > $diff_file");
