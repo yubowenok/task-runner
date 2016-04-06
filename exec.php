@@ -34,7 +34,7 @@ function runTask($task, $map_py, $red_py) {
   }
   $hash = 'run_' . $hash;
   $sandboxDir = "sandbox/$hash/";
-  mkdir($sandboxDir);
+  mkdir($sandboxDir, 0777);
 
   $task_dir = "tasks/$task/";
   $map_file = $sandboxDir . 'map.py';
@@ -103,8 +103,13 @@ function runTask($task, $map_py, $red_py) {
     $diff = file_get_contents($diff_file);
   }
 
+  // Make files written from web editable.
+  exec("chmod -R 0777 $sandboxDir");
+
   // Do not remove $sandboxDir if history is wanted.
   //exec("rm -r $sandboxDir");
+
+
 
   $result = array('error' => $error, 'diff' => $diff, 'output' => $output);
   return $result;

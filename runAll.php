@@ -16,12 +16,13 @@ while (file_exists("sandbox/file_$hash/")) {
   $hash = randomString();
 }
 $sandboxDir = "sandbox/file_$hash/";
-mkdir($sandboxDir);
+mkdir($sandboxDir, 0777);
 
 $zip = $sandboxDir . 'sources.zip';
 move_uploaded_file($file['tmp_name'], $zip);
 
 exec("unzip $zip -d $sandboxDir");
+exec("chmod -R 0777 $sandboxDir");
 
 set_time_limit(120);
 
