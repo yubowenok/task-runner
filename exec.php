@@ -49,6 +49,7 @@ function runTask($task, $map_py, $red_py) {
   $diff_file = $sandboxDir . 'diff';
   $answer_file = $task_dir . $task . '.ans';
   $sample_tables = '';
+  $reducer = 2;
 
   $config = getTaskConfig();
   foreach($config as $pattern => $def) {
@@ -56,6 +57,9 @@ function runTask($task, $map_py, $red_py) {
     if ($matched) {
       if (array_key_exists('sample_tables', $def)) {
          $sample_tables = 'tasks/' . $def['sample_tables'];
+      }
+      if (array_key_exists('reducer', $def)) {
+        $reducer = intval($def['reducer']);
       }
     } else if ($matched === false) {
       abort('invalid regex pattern in task config: ' . $pattern);
@@ -78,8 +82,14 @@ function runTask($task, $map_py, $red_py) {
   exec("python partition.py $sandboxDir < $map_output_sorted 2>> $error_file");
   $red_input1 = $sandboxDir . 'red_input1';
   $red_input2 = $sandboxDir . 'red_input2';
-  exec("python $red_file < $red_input1 2>> $error_file >> $red_output");
-  exec("python $red_file < $red_input2 2>> $error_file >> $red_output");
+  if ($reducer == 1) {
+    exec("cat $red_input2 >> $red_input1");
+    exec("python $red_file < $red_input1 2>> $error_file >> $red_output");
+  }
+  else {
+    exec("python $red_file < $red_input1 2>> $error_file >> $red_output");
+    exec("python $red_file < $red_input2 2>> $error_file >> $red_output");
+  }
   exec("sort $red_output > $output_file");
   $error = parseError($error_file, false);
 
@@ -170,24 +180,24 @@ function getTaskConfig() {
   $result = array();
   if (file_exists('tasks/config')) {
     $config_str = file_get_contents('tasks/config');
-    $tokens = preg_split("/[\s\r\n]+/", $config_str);
-
-    $expect_task = false;
-    $expect_sample_tables = false;
+    $lines = preg_split("/[\r\n]+/", $config_str);
     $current_task = '';
 
-    foreach($tokens as $token) {
-      if ($token == '[task]') {
-        $expect_task = true;
-      } else if ($token == 'sample_tables:') {
-        $expect_sample_tables = true;
-      } else if ($expect_task) {
-        $current_task = $token;
-        $result[$current_task] = array();
-        $expect_task = false;
-      } else if ($expect_sample_tables) {
-        $result[$current_task]['sample_tables'] = $token;
-        $expect_sample_tables = false;
+    foreach ($lines as $line) {
+      $tokens = preg_split("/\s+/", $line);
+
+      if (sizeof($tokens) < 2)
+        continue;
+
+      $key = $tokens[0];
+      $value = $tokens[1];
+      if ($key == '[task]') {
+        $current_task = $value;
+        $result[$value] = array();
+      } else if ($key == 'sample_tables:') {
+        $result[$current_task]['sample_tables'] = $value;
+      } else if ($key == 'reducer:') {
+        $result[$current_task]['reducer'] = $value;
       }
     }
   }
