@@ -8,11 +8,19 @@ keys = []
 pairs = []
 for line in sys.stdin:
   tokens = line.strip().split('\t', 1)
+  if len(tokens) < 1:
+	  continue
   key = tokens[0]
   if key not in keyDict:
     keyDict[key] = True
     keys.append(key)
-  pairs.append(tokens)
+  
+  value = ''
+  if len(tokens) == 2:
+    value = tokens[1]
+  else:
+    raise Exception('unexpected number of tokens')
+  pairs.append([key, value])
 
 p1 = open(dir + 'red_input1', 'w')
 p2 = open(dir + 'red_input2', 'w')
