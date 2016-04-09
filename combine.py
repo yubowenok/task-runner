@@ -18,8 +18,6 @@ for line in sys.stdin:
   value = ''
   if len(tokens) == 2:
     value = tokens[1]
-  else:
-    raise Exception('unexpected number of tokens')
   pairs.append([key, value])
 
 p1 = open(dir + 'red_input1', 'w')

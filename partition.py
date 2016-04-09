@@ -10,7 +10,6 @@ lines = []
 for line in sys.stdin:
   lines.append(line.strip())
 
-random.seed('mapreduce')
 random.shuffle(lines)
 
 p1 = open(dir + 'part00000-' + basename, 'w')
