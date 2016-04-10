@@ -17,6 +17,7 @@ while (file_exists("sandbox/file_$hash/")) {
 }
 $sandboxDir = "sandbox/file_$hash/";
 mkdir($sandboxDir);
+exec("chmod -R 0777 $sandboxDir");
 
 $zip = $sandboxDir . 'sources.zip';
 move_uploaded_file($file['tmp_name'], $zip);
@@ -46,6 +47,8 @@ foreach ($tasks as $task) {
     $runResult['id'] = $task['id'];
     array_push($result, $runResult);
   }
+
+  exec("chmod -R 0777 $sandboxDir");
 }
 
 header("Content-type: application/json");

@@ -35,6 +35,7 @@ function runTask($task, $map_py, $red_py) {
   $hash = 'run_' . $hash;
   $sandboxDir = "sandbox/$hash/";
   mkdir($sandboxDir);
+  exec("chmod -R 0777 $sandboxDir");
 
   $task_dir = "tasks/$task/";
   $map_file = $sandboxDir . 'map.py';
@@ -88,6 +89,8 @@ function runTask($task, $map_py, $red_py) {
   // Do not remove $sandboxDir if history is wanted.
   //exec("rm -r $sandboxDir");
 
+  exec("chmod -R 0777 $sandboxDir");
+  
   $result = array('error' => $error, 'diff' => $diff, 'output' => $output);
   return $result;
 }
